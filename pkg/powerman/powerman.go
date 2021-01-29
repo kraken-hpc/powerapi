@@ -1,6 +1,6 @@
 // +build linux
 
-package main
+package powerman
 
 /*
 #include <stdio.h>
@@ -44,6 +44,8 @@ const (
 	PM_ON      Status = C.PM_ON
 )
 
+const PM_CONN_INET6 = C.PM_CONN_INET6
+
 // StatusName maps node Status to a string
 var StatusName = map[Status]string{
 	PM_UNKNOWN: "UNKNOWN",
@@ -82,12 +84,14 @@ func toError(r C.pm_err_t, errno error) error {
 // Connections should be Disconnect()'ed when done
 type Connection struct {
 	h      *C.pm_handle_t
+	is     []*Iterator
 	active bool
 }
 
 // Connect to the powerman service
 func Connect(server string, flags int) (*Connection, error) {
 	c := &Connection{}
+	c.is = []*Iterator{}
 	c.h = (*C.pm_handle_t)(C.malloc(C.sizeof_pm_handle_t))
 	cs := C.CString(server)
 	defer C.free(unsafe.Pointer(cs))
@@ -97,6 +101,9 @@ func Connect(server string, flags int) (*Connection, error) {
 		return nil, e
 	}
 	c.active = true
+	// we create a default iterator
+	i, _ := c.NodeIteratorCreate()
+	c.is = append(c.is, i)
 	return c, nil
 }
 
@@ -107,6 +114,9 @@ func (c *Connection) Disconnect() {
 	}
 	C.pm_disconnect(*c.h)
 	C.free(unsafe.Pointer(c.h))
+	for _, i := range c.is {
+		i.destroy()
+	}
 	c.active = false
 }
 
@@ -158,6 +168,21 @@ func (c *Connection) NodeCycle(node string) error {
 	return toError(r, errno)
 }
 
+// Next gets the next node in the default iterator
+func (c *Connection) Next() (node string, end bool) {
+	return c.is[0].Next()
+}
+
+// All uses the default iterator to get a list of all known nodes
+func (c *Connection) All() []string {
+	return c.is[0].All()
+}
+
+// Reset resets the default iterator to the first node
+func (c *Connection) Reset() {
+	c.is[0].Reset()
+}
+
 type Iterator struct {
 	c      *Connection
 	i      *C.pm_node_iterator_t
@@ -176,6 +201,7 @@ func (c *Connection) NodeIteratorCreate() (*Iterator, error) {
 		return nil, e
 	}
 	i.active = true
+	c.is = append(c.is, i)
 	return i, nil
 }
 
@@ -186,7 +212,6 @@ func (i *Iterator) Next() (node string, end bool) {
 		return "", true
 	}
 	r, _ := C.pm_node_next(*i.i)
-	defer C.free(unsafe.Pointer(r))
 	if r == nil {
 		return "", true
 	}
@@ -201,9 +226,24 @@ func (i *Iterator) Reset() {
 	C.pm_node_iterator_reset(*i.i)
 }
 
-// Destroy destroys an iterator and cleans up resources
+// All gets a list of all known nodes
+func (i *Iterator) All() (nodes []string) {
+	i.Reset()
+	for {
+		n, end := i.Next()
+		if end {
+			break
+		}
+		nodes = append(nodes, n)
+	}
+	return
+}
+
+// destroy destroys an iterator and cleans up resources
 // Note: this also destroys the connection
-func (i *Iterator) Destroy() {
+// because of the interaction with pm_disconnect, we don't export this function
+// instead, we collect all iterators when Disconnect is called
+func (i *Iterator) destroy() {
 	if !i.active || !i.c.active {
 		return // nop
 	}
@@ -233,7 +273,6 @@ func main() {
 	if e != nil {
 		fmt.Printf("failed to create node iterator: %v\n", e)
 	}
-	defer i.Destroy()
 	for {
 		n, end := i.Next()
 		if end {
