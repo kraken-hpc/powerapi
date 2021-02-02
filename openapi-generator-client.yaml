@@ -1,0 +1,13 @@
+---
+disallowAdditionalPropertiesIfNotPresent: false
+enumClassPrefix: true
+generateInterfaces: true
+hideGenerationTimestamp: true
+isGoSubmodule: true
+packageName: powerapi
+packageVersion: "0.1.0"
+prependFormOrBodyParameters: false
+structPrefix: false
+useOneOfDiscriminatorLookup: false
+withAWSv4Signature: false
+withXml: false
