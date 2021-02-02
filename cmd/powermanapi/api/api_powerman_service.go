@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	pm "github.com/jlowellwofford/powermanapi/pkg/powerman"
 )
@@ -43,18 +44,74 @@ var pmToAPI = map[pm.Status]PowerState{
 	pm.PM_OFF: POWERSTATE_OFF,
 }
 
+var ERROR_NOTSUPPORTED = errors.New("operation not supported")
+
+func (s *PowermanApiService) resetNode(conn *pm.Connection, name string, r ResetType) (ResetType, error) {
+	switch r {
+	case RESETTYPE_FORCE_OFF:
+		if e := conn.NodeOff(name); e != nil {
+			return ResetType(0), e
+		}
+		return RESETTYPE_FORCE_OFF, nil
+	case RESETTYPE_FORCE_ON, RESETTYPE_ON:
+		if e := conn.NodeOn(name); e != nil {
+			return ResetType(0), e
+		}
+		return RESETTYPE_ON, nil
+	case RESETTYPE_FORCE_RESTART, RESETTYPE_POWER_CYCLE:
+		if e := conn.NodeCycle(name); e != nil {
+			return ResetType(0), e
+		}
+		return RESETTYPE_POWER_CYCLE, nil
+	case RESETTYPE_GRACEFUL_RESTART, RESETTYPE_PUSH_POWER_BUTTON, RESETTYPE_GRACEFUL_SHUTDOWN, RESETTYPE_NMI:
+		return ResetType(0), ERROR_NOTSUPPORTED
+	}
+	return ResetType(0), ERROR_NOTSUPPORTED
+}
+
+func (s *PowermanApiService) nodeToURI(name string) string {
+	return fmt.Sprintf("%s/ComputerSystems/%s", urlBase, name)
+}
+
+var reURI = regexp.MustCompile(fmt.Sprintf("^%s%s([a-zA-Z0-9-]+)/?$", regexp.QuoteMeta(urlBase), regexp.QuoteMeta("/ComputerSystems/")))
+
+func (s *PowermanApiService) uriToNode(uri string) string {
+	m := reURI.FindAllStringSubmatch(uri, 1)
+	if len(m) != 1 {
+		// not valid
+		return ""
+	}
+	return m[0][1]
+}
+
 // AggregationServiceActionsAggregationServiceResetPost - Request aggregate system reset
 func (s *PowermanApiService) AggregationServiceActionsAggregationServiceResetPost(ctx context.Context, aggregationResetBody AggregationResetBody) (ImplResponse, error) {
-	// TODO - update AggregationServiceActionsAggregationServiceResetPost with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	conn, e := s.connect()
+	defer conn.Disconnect()
+	if e != nil {
+		return Response(http.StatusInternalServerError, nil), errors.New("failed to connect to powerman server:" + e.Error())
+	}
+	ret := AggregationResetBody{
+		ResetType:  aggregationResetBody.ResetType,
+		TargetURIs: []string{},
+	}
+	for _, uri := range aggregationResetBody.TargetURIs {
+		n := s.uriToNode(uri)
+		if n == "" {
+			// not a valid node, we just skip it
+			continue
+		}
+		if t, e := s.resetNode(conn, n, aggregationResetBody.ResetType); e != nil {
+			// failed, we won't report it
+			continue
+		} else {
+			ret.ResetType = t
+		}
+		ret.TargetURIs = append(ret.TargetURIs, uri)
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, AggregationResetBody{}) or use other options such as http.Ok ...
-	//return Response(200, AggregationResetBody{}), nil
-
-	//TODO: Uncomment the next line to return response Response(0, Error{}) or use other options such as http.Ok ...
-	//return Response(0, Error{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("AggregationServiceActionsAggregationServiceResetPost method not implemented")
+	// we actually always return 200
+	return Response(200, ret), nil
 }
 
 // ComputerSystemsGet - Get computer systems
@@ -80,7 +137,7 @@ func (s *PowermanApiService) ComputerSystemsGet(ctx context.Context) (ImplRespon
 			return Response(http.StatusInternalServerError, nil), errors.New("failed to get node state:" + e.Error())
 		}
 		csc.Systems = append(csc.Systems, ComputerSystem{
-			Id:         urlBase + "/ComputerSystems/" + n,
+			Id:         s.nodeToURI(n),
 			Name:       n,
 			PowerState: pmToAPI[stat],
 		})
@@ -95,27 +152,13 @@ func (s *PowermanApiService) ComputerSystemsNameActionsComputerSystemResetPost(c
 	if e != nil {
 		return Response(http.StatusInternalServerError, nil), errors.New("failed to connect to powerman server:" + e.Error())
 	}
-	switch resetRequestBody.ResetType {
-	case RESETTYPE_FORCE_OFF:
-		if e := conn.NodeOff(name); e != nil {
-			return Response(http.StatusInternalServerError, nil), errors.New("failed to set node state: " + e.Error())
-		}
-		return Response(200, ResetRequestBody{ResetType: RESETTYPE_FORCE_OFF}), nil
-	case RESETTYPE_FORCE_ON, RESETTYPE_ON:
-		if e := conn.NodeOn(name); e != nil {
-			return Response(http.StatusInternalServerError, nil), errors.New("failed to set node state: " + e.Error())
-		}
-		return Response(200, ResetRequestBody{ResetType: RESETTYPE_FORCE_ON}), nil
-	case RESETTYPE_FORCE_RESTART, RESETTYPE_POWER_CYCLE:
-		if e := conn.NodeCycle(name); e != nil {
-			return Response(http.StatusInternalServerError, nil), errors.New("failed to set node state: " + e.Error())
-		}
-		return Response(200, ResetRequestBody{ResetType: RESETTYPE_POWER_CYCLE}), nil
-	case RESETTYPE_GRACEFUL_RESTART, RESETTYPE_PUSH_POWER_BUTTON, RESETTYPE_GRACEFUL_SHUTDOWN, RESETTYPE_NMI:
-		return Response(http.StatusNotImplemented, nil), errors.New("operation not supported: " + string(resetRequestBody.ResetType))
-	}
 
-	return Response(http.StatusBadRequest, nil), errors.New("unrecognized node state: " + string(resetRequestBody.ResetType))
+	t, e := s.resetNode(conn, name, resetRequestBody.ResetType)
+	if e != nil {
+		// TODO don't just return 500 for every error
+		return Response(http.StatusNotImplemented, nil), errors.New("node reset failed: " + e.Error())
+	}
+	return Response(200, ResetRequestBody{ResetType: t}), nil
 }
 
 // ComputerSystemsNameGet - Get a specific computer system state
