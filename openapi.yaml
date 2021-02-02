@@ -1,0 +1,228 @@
+openapi: 3.0.2
+info:
+  title: Power API v1.0
+  version: "1.0"
+servers:
+- url: https://{{server}}/power/v1
+  variables:
+    server:
+      default: example.api.com:8269
+- url: http://{{server}}/power/v1
+  variables:
+    server:
+      default: example.api.com:8269
+paths:
+  /ComputerSystems:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComputerSystemCollection'
+          description: Response contains the status of the ComputerSystems collection
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error response
+      summary: Get computer systems
+  /ComputerSystems/{name}:
+    get:
+      parameters:
+      - description: Unique name of the computer system
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          minLength: 1
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComputerSystem'
+          description: Response contains the status of the ComputerSystem
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error response
+      summary: Get a specific computer system state
+  /ComputerSystems/{name}/Actions/ComputerSystem.Reset:
+    post:
+      parameters:
+      - description: Unique name of the computer system
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          minLength: 1
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequestBody'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetRequestBody'
+          description: Reset request succeded, action performed returned (may differ
+            from request)
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error response
+      summary: Request system reset
+  /AggregationService/Actions/AggregationService.Reset:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AggregationResetBody'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AggregationResetBody'
+          description: Reset request succeeded, actions performed returned (may differ
+            from request)
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Error response
+      summary: Request aggregate system reset
+components:
+  responses:
+    error:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: Error response
+  schemas:
+    Error:
+      properties:
+        error:
+          $ref: '#/components/schemas/Error_error'
+      type: object
+    uriID:
+      description: An id is a URI-reference for the object
+      readOnly: true
+      type: string
+    ResetType:
+      enum:
+      - "On"
+      - ForceOff
+      - GracefulShutdown
+      - GracefulRestart
+      - ForceRestart
+      - Nmi
+      - ForceOn
+      - PushPowerButton
+      - PowerCycle
+      type: string
+    ResetRequestBody:
+      description: Reset request
+      example: {}
+      properties:
+        ResetType:
+          $ref: '#/components/schemas/ResetType'
+      required:
+      - ResetType
+    AggregationResetBody:
+      description: Aggregation reset request
+      example:
+        TargetURIs:
+        - null
+        - null
+      properties:
+        ResetType:
+          $ref: '#/components/schemas/ResetType'
+        TargetURIs:
+          description: A list of system URIs to apply the reset to
+          items:
+            $ref: '#/components/schemas/uriID'
+          type: array
+    PowerState:
+      description: Power state for a component
+      enum:
+      - "On"
+      - "Off"
+      type: string
+    ComputerSystem:
+      description: A single computer system with power state
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          description: An id is a URI-reference for the object
+          readOnly: true
+          type: string
+        name:
+          description: |
+            The name is the unique name identifier for the ComputerSystem. This is used to reference the system in the API.
+          readOnly: true
+          type: string
+        powerState:
+          $ref: '#/components/schemas/PowerState'
+      required:
+      - id
+      - name
+      type: object
+    ComputerSystemCollection:
+      description: A collection of computer systems
+      example:
+        systems:
+        - name: name
+          id: id
+        - name: name
+          id: id
+        name: ""
+        id: id
+      properties:
+        id:
+          description: An id is a URI-reference for the object
+          readOnly: true
+          type: string
+        name:
+          description: Human-readable name for the collection
+          readOnly: true
+          type: string
+        systems:
+          description: Collection of ComputerSystem objects
+          items:
+            $ref: '#/components/schemas/ComputerSystem'
+          type: array
+    Error_error:
+      description: Properties that describe the error
+      properties:
+        code:
+          description: Response code
+          readOnly: true
+          type: string
+        message:
+          description: A human-readable error message string
+          readOnly: true
+          type: string
+      required:
+      - code
+      - message
+      type: object

@@ -1,0 +1,7 @@
+---
+enumClassPrefix: true
+featureCORS: true
+packageName: api
+packageVersion: 0.1.0
+serverPort: 8269
+sourceFolder: api
