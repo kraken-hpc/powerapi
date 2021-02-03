@@ -1,6 +1,6 @@
 # \DefaultApi
 
-All URIs are relative to *https://}/power/v1*
+All URIs are relative to *https://example.api.com:8269/power/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------

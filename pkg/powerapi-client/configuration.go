@@ -105,22 +105,30 @@ func NewConfiguration() *Configuration {
 		Debug:            false,
 		Servers:          ServerConfigurations{
 			{
-				URL: "https://{{server}}/power/v1",
-				Description: "No description provided",
+				URL: "https://{server}{apiBase}",
+				Description: "Power API over HTTPS",
 				Variables: map[string]ServerVariable{
 					"server": ServerVariable{
-						Description: "No description provided",
+						Description: "api server in the format <host>:<port>",
 						DefaultValue: "example.api.com:8269",
+					},
+					"apiBase": ServerVariable{
+						Description: "root of the Power API",
+						DefaultValue: "/power/v1",
 					},
 				},
 			},
 			{
-				URL: "http://{{server}}/power/v1",
-				Description: "No description provided",
+				URL: "http://{server}{apiBase}",
+				Description: "Power API over HTTP",
 				Variables: map[string]ServerVariable{
 					"server": ServerVariable{
-						Description: "No description provided",
+						Description: "api server in the format <host>:<port>",
 						DefaultValue: "example.api.com:8269",
+					},
+					"apiBase": ServerVariable{
+						Description: "root of the Power API",
+						DefaultValue: "/power/v1",
 					},
 				},
 			},

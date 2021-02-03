@@ -3,14 +3,24 @@ info:
   title: Power API v1.0
   version: "1.0"
 servers:
-- url: https://{{server}}/power/v1
+- url: https://{server}{apiBase}
+  description: "Power API over HTTPS"
   variables:
     server:
+      description: "api server in the format <host>:<port>"
       default: example.api.com:8269
-- url: http://{{server}}/power/v1
+    apiBase:
+      description: "root of the Power API"
+      default: "/power/v1"
+- url: http://{server}{apiBase}
+  description: "Power API over HTTP"
   variables:
     server:
+      description: "api server in the format <host>:<port>"
       default: example.api.com:8269
+    apiBase:
+      description: "root of the Power API"
+      default: "/power/v1"
 paths:
   /ComputerSystems:
     get:

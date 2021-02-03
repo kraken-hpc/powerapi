@@ -74,7 +74,7 @@ ctx = context.WithValue(context.Background(), sw.ContextOperationServerVariables
 
 ## Documentation for API Endpoints
 
-All URIs are relative to *https://}/power/v1*
+All URIs are relative to *https://example.api.com:8269/power/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------

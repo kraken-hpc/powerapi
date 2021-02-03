@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
@@ -16,8 +15,6 @@ docs/PowerState.md
 docs/ResetRequestBody.md
 docs/ResetType.md
 git_push.sh
-go.mod
-go.sum
 model_aggregation_reset_body.go
 model_computer_system.go
 model_computer_system_collection.go

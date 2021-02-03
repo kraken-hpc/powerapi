@@ -24,12 +24,12 @@ type DefaultApiController struct {
 
 // NewDefaultApiController creates a default api controller
 func NewDefaultApiController(s DefaultApiServicer) Router {
-	return &DefaultApiController{service: s}
+	return &DefaultApiController{ service: s }
 }
 
 // Routes returns all of the api route for the DefaultApiController
 func (c *DefaultApiController) Routes() Routes {
-	return Routes{
+	return Routes{ 
 		{
 			"AggregationServiceActionsAggregationServiceResetPost",
 			strings.ToUpper("Post"),
@@ -58,13 +58,13 @@ func (c *DefaultApiController) Routes() Routes {
 }
 
 // AggregationServiceActionsAggregationServiceResetPost - Request aggregate system reset
-func (c *DefaultApiController) AggregationServiceActionsAggregationServiceResetPost(w http.ResponseWriter, r *http.Request) {
+func (c *DefaultApiController) AggregationServiceActionsAggregationServiceResetPost(w http.ResponseWriter, r *http.Request) { 
 	aggregationResetBody := &AggregationResetBody{}
 	if err := json.NewDecoder(r.Body).Decode(&aggregationResetBody); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	
 	result, err := c.service.AggregationServiceActionsAggregationServiceResetPost(r.Context(), *aggregationResetBody)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -73,11 +73,11 @@ func (c *DefaultApiController) AggregationServiceActionsAggregationServiceResetP
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
 // ComputerSystemsGet - Get computer systems
-func (c *DefaultApiController) ComputerSystemsGet(w http.ResponseWriter, r *http.Request) {
+func (c *DefaultApiController) ComputerSystemsGet(w http.ResponseWriter, r *http.Request) { 
 	result, err := c.service.ComputerSystemsGet(r.Context())
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -86,11 +86,11 @@ func (c *DefaultApiController) ComputerSystemsGet(w http.ResponseWriter, r *http
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
 // ComputerSystemsNameActionsComputerSystemResetPost - Request system reset
-func (c *DefaultApiController) ComputerSystemsNameActionsComputerSystemResetPost(w http.ResponseWriter, r *http.Request) {
+func (c *DefaultApiController) ComputerSystemsNameActionsComputerSystemResetPost(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	name := params["name"]
 	resetRequestBody := &ResetRequestBody{}
@@ -98,7 +98,7 @@ func (c *DefaultApiController) ComputerSystemsNameActionsComputerSystemResetPost
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	
 	result, err := c.service.ComputerSystemsNameActionsComputerSystemResetPost(r.Context(), name, *resetRequestBody)
 	//If an error occured, encode the error with the status code
 	if err != nil {
@@ -107,11 +107,11 @@ func (c *DefaultApiController) ComputerSystemsNameActionsComputerSystemResetPost
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
 
 // ComputerSystemsNameGet - Get a specific computer system state
-func (c *DefaultApiController) ComputerSystemsNameGet(w http.ResponseWriter, r *http.Request) {
+func (c *DefaultApiController) ComputerSystemsNameGet(w http.ResponseWriter, r *http.Request) { 
 	params := mux.Vars(r)
 	name := params["name"]
 	result, err := c.service.ComputerSystemsNameGet(r.Context(), name)
@@ -122,5 +122,5 @@ func (c *DefaultApiController) ComputerSystemsNameGet(w http.ResponseWriter, r *
 	}
 	//If no error, encode the body and the result code
 	EncodeJSONResponse(result.Body, &result.Code, w)
-
+	
 }
