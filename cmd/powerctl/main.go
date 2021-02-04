@@ -15,7 +15,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	api "github.com/hpc/powerapi/pkg/powerapi-client"
@@ -144,18 +143,12 @@ func list(cmd []string) error {
 }
 
 func nodeToURI(name string) string {
-	return fmt.Sprintf("%s/ComputerSystems/%s", flags.apiBase, name)
+	//return fmt.Sprintf("%s/ComputerSystems/%s", flags.apiBase, name)
+	return api.NodeToURI(client, ctx, name)
 }
 
-var reURI *regexp.Regexp
-
 func uriToNode(uri string) string {
-	m := reURI.FindAllStringSubmatch(uri, 1)
-	if len(m) != 1 {
-		// not valid
-		return ""
-	}
-	return m[0][1]
+	return api.URIToNode(client, ctx, uri)
 }
 
 func reset(cmd []string, t api.ResetType) error {
@@ -241,7 +234,6 @@ func main() {
 
 	configuration := api.NewConfiguration()
 	client = api.NewAPIClient(configuration)
-	reURI = regexp.MustCompile(fmt.Sprintf("^%s%s([a-zA-Z0-9-]+)/?$", regexp.QuoteMeta(flags.apiBase), regexp.QuoteMeta("/ComputerSystems/")))
 
 	runShell(flag.Args())
 }
