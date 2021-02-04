@@ -1,3 +1,12 @@
+/* main.go: powerctl commandline PowerAPI utility
+ *
+ * Author: J. Lowell Wofford <lowell@lanl.gov>
+ *
+ * This software is open source software available under the BSD-3 license.
+ * Copyright (c) 2020, Triad National Security, LLC
+ * See LICENSE file for details.
+ */
+
 package main
 
 import (

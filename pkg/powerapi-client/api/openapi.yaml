@@ -1,5 +1,11 @@
 openapi: 3.0.2
 info:
+  contact:
+    email: lowell@lanl.gov
+    name: Triad National Security LLC
+  license:
+    name: BSD 3
+    url: https://opensource.org/licenses/BSD-3-Clause
   title: Power API v1.0
   version: "1.0"
 servers:
