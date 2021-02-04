@@ -10,19 +10,35 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
 	api "github.com/hpc/powerapi/cmd/powermanapi/api"
 )
 
-func main() {
-	log.Printf("Server started")
+var flags struct {
+	pmip   string
+	pmport int
+	ip     string
+	port   int
+	https  bool
+}
 
-	PowermanApiService := api.NewPowermanApiService("127.0.0.1", 10101)
+func main() {
+	flag.StringVar(&flags.pmip, "pmip", "127.0.0.1", "specify the IP where powermand is listening")
+	flag.IntVar(&flags.pmport, "pmport", 10101, "specify the port that powermand is listening on")
+	flag.StringVar(&flags.ip, "ip", "127.0.0.1", "specify the IP address to listen on")
+	flag.IntVar(&flags.port, "port", 8269, "specify the TCP port to listen on")
+	flag.Parse()
+
+	log.Printf("starting powermanapi service on %s:%d talking to powermand at %s:%d", flags.ip, flags.port, flags.pmip, flags.pmport)
+
+	PowermanApiService := api.NewPowermanApiService(flags.pmip, flags.pmport)
 	DefaultApiController := api.NewDefaultApiController(PowermanApiService)
 
 	router := api.NewRouter(DefaultApiController)
 
-	log.Fatal(http.ListenAndServe(":8269", router))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", flags.ip, flags.port), router))
 }
