@@ -1,4 +1,4 @@
-module github.com/jlowellwofford/powermanapi
+module github.com/hpc/powerapi
 
 go 1.15
 

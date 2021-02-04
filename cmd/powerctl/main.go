@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"strings"
 
-	api "github.com/jlowellwofford/powermanapi/pkg/powerapi-client"
+	api "github.com/hpc/powerapi/pkg/powerapi-client"
 )
 
 var flags struct {

@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"regexp"
 
-	pm "github.com/jlowellwofford/powermanapi/pkg/powerman"
+	pm "github.com/hpc/powerapi/pkg/powerman"
 )
 
 const urlBase = "/power/v1"

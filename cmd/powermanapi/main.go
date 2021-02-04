@@ -5,7 +5,7 @@
  * This software is open source software available under the BSD-3 license.
  * Copyright (c) 2020, Triad National Security, LLC
  * See LICENSE file for details.
- *
+ */
 
 package main
 
@@ -13,7 +13,7 @@ import (
 	"log"
 	"net/http"
 
-	api "github.com/jlowellwofford/powermanapi/cmd/powermanapi/api"
+	api "github.com/hpc/powerapi/cmd/powermanapi/api"
 )
 
 func main() {
