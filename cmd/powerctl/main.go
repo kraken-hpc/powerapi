@@ -17,7 +17,7 @@ import (
 	"os"
 	"strings"
 
-	api "github.com/hpc/powerapi/pkg/powerapi-client"
+	api "github.com/kraken-hpc/powerapi/pkg/powerapi-client"
 )
 
 var flags struct {

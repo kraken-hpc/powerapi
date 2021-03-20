@@ -16,7 +16,7 @@ import (
 	"os"
 	"strings"
 
-	pm "github.com/hpc/powerapi/pkg/powerman"
+	pm "github.com/kraken-hpc/powerapi/pkg/powerman"
 )
 
 var flags struct {

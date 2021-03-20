@@ -15,7 +15,7 @@ import (
 	"log"
 	"net/http"
 
-	api "github.com/hpc/powerapi/cmd/powermanapi/api"
+	api "github.com/kraken-hpc/powerapi/cmd/powermanapi/api"
 )
 
 var flags struct {

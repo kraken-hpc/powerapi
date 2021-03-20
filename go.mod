@@ -1,4 +1,4 @@
-module github.com/hpc/powerapi
+module github.com/kraken-hpc/powerapi
 
 go 1.15
 
