@@ -1,0 +1,26 @@
+### -*- Mode: Dockerfile; fill-column: 80; comment-auto-fill-only-comments: t; tab-width: 4 -*-
+################################################################################
+# Dockerfile: container definitions for powerman
+#             powerman isn't strictly part of this project, but we need it to build on.
+# 
+# Author: J. Lowell Wofford <lowell@lanl.gov>
+# 
+# This software is open source software available under the BSD-3 license.
+# Copyright (c) 2021, Triad National Security, LLC
+# See LICENSE file for details.
+# 
+################################################################################
+
+ARG OPENSUSE="15"
+
+FROM docker.io/opensuse/leap:${OPENSUSE} AS powerman
+RUN mkdir /tmp/zypper-cache \
+    && zypper -C /tmp/zypper-cache -n install powerman powerman-devel \
+    && rm -rf /tmp/zypper-cache
+# we install a dummy config so that the container won't fail by default
+# you should probably bind mount in real config
+RUN echo "include \"/etc/powerman/bashfun.dev\"" >> /etc/powerman/powerman.conf \
+    && echo "device \"bf0\" \"bashfun\" \"/bin/bash |&\"" >> /etc/powerman/powerman.conf \
+    && echo "node \"b1\" \"bf0\" \"1\"" >> /etc/powerman/powerman.conf 
+ENTRYPOINT [ "/usr/sbin/powermand" ]
+CMD [ "-f", "-c", "/etc/powerman/powerman.conf" ]

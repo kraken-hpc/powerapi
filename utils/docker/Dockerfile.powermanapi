@@ -1,0 +1,28 @@
+### -*- Mode: Dockerfile; fill-column: 80; comment-auto-fill-only-comments: t; tab-width: 4 -*-
+################################################################################
+# Dockerfile: container definitions for powermanapi
+# 
+# Author: J. Lowell Wofford <lowell@lanl.gov>
+# 
+# This software is open source software available under the BSD-3 license.
+# Copyright (c) 2021, Triad National Security, LLC
+# See LICENSE file for details.
+# 
+################################################################################
+
+FROM docker.io/krakenhpc/powerman AS powermanapi-build
+WORKDIR "/src"
+COPY . .
+RUN zypper -n install go
+RUN go mod download \
+    && go build ./cmd/powermanapi \
+    && go build ./cmd/pmshell \
+    && go build ./cmd/powerctl
+ENTRYPOINT [ "/bin/sh" ]
+
+FROM docker.io/krakenhpc/powerman AS powermanapi
+COPY --from=powermanapi-build /src/powermanapi /usr/sbin/powermanapi
+COPY --from=powermanapi-build /src/pmshell /usr/sbin/pmshell
+COPY --from=powermanapi-build /src/powerctl /usr/sbin/powerctl
+ENTRYPOINT [ "/usr/sbin/powermanapi" ]
+CMD [ ]
